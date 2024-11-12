@@ -13,9 +13,6 @@ BuildRequires:  pkgconfig libibverbs-devel librdmacm-devel libxslt libaio-devel
 BuildRequires:  docbook-xsl-stylesheets
 Requires: aaa_base
 %else
-BuildRequires:  docbook-style-xsl
-Requires(post): chkconfig
-Requires(preun): chkconfig
 Requires(preun): initscripts
 %endif
 Requires: lsof sg3_utils
@@ -37,39 +34,38 @@ Currently, software iSCSI targets are supported.
 %install
 %{__rm} -rf %{buildroot}
 %{__install} -d %{buildroot}%{_sbindir}
-%{__install} -d %{buildroot}%{_mandir}/man5
-%{__install} -d %{buildroot}%{_mandir}/man8
-%{__install} -d %{buildroot}%{_initrddir}
 %{__install} -d %{buildroot}/etc/bash_completion.d
 %{__install} -d %{buildroot}/etc/tgt
+%{__install} -d %{buildroot}/usr/lib/systemd/system
+%{__install} -d %{buildroot}/usr/lib/tgt/backing-store
 
 %{__install} -p -m 0755 scripts/tgt-setup-lun %{buildroot}%{_sbindir}
-%{__install} -p -m 0755 scripts/initd.sample %{buildroot}%{_initrddir}/tgtd
 %{__install} -p -m 0755 scripts/tgt-admin %{buildroot}/%{_sbindir}/tgt-admin
 %{__install} -p -m 0644 scripts/tgt.bashcomp.sh %{buildroot}/etc/bash_completion.d/tgt
-%{__install} -p -m 0644 doc/manpages/targets.conf.5 %{buildroot}/%{_mandir}/man5
-%{__install} -p -m 0644 doc/manpages/tgtadm.8 %{buildroot}/%{_mandir}/man8
-%{__install} -p -m 0644 doc/manpages/tgt-admin.8 %{buildroot}/%{_mandir}/man8
-%{__install} -p -m 0644 doc/manpages/tgt-setup-lun.8 %{buildroot}/%{_mandir}/man8
-%{__install} -p -m 0644 doc/manpages/tgtimg.8 %{buildroot}/%{_mandir}/man8
-%{__install} -p -m 0600 conf/targets.conf %{buildroot}/etc/tgt
+%{__install} -p -m 0600 conf/targets.conf %{buildroot}/etc/tgt/targets.conf
+%{__install} -p -m 0600 conf/tgtd.conf %{buildroot}/etc/tgt/tgtd.conf
+%{__install} -p -m 0644 scripts/tgtd.service %{buildroot}/usr/lib/systemd/system/
+%{__install} -p -m 0600 usr/bs_rbd.so %{buildroot}/usr/lib/tgt/backing-store/
+
 
 pushd usr
 %{__make} install DESTDIR=%{buildroot} sbindir=%{_sbindir}
 
+%pre
+	rm -rf /etc/tgt/ > /dev/null 2>&1 || :
 
 %post
-/sbin/chkconfig --add tgtd
-
-%postun
-if [ "$1" = "1" ] ; then
-     /sbin/service tgtd condrestart > /dev/null 2>&1 || :
+if [ $1 -eq 1 ] && [ -x /usr/bin/systemctl ] ; then
+	# Initial installation
+	/usr/bin/systemctl --no-reload preset tgtd.service || :
 fi
 
+
 %preun
-if [ "$1" = "0" ] ; then
-     /sbin/chkconfig tgtd stop > /dev/null 2>&1
-     /sbin/chkconfig --del tgtd
+if [ $1 -eq 0 ] && [ -x /usr/bin/systemctl ] ; then
+	# Package removal, not upgrade
+	/usr/bin/systemctl stop tgtd> /dev/null 2>&1 || :
+	/usr/bin/systemctl --no-reload disable --now tgtd.service || :
 fi
 
 
@@ -79,14 +75,14 @@ fi
 
 %files
 %defattr(-, root, root, -)
-%doc README doc/README.iscsi doc/README.iser doc/README.lu_configuration doc/README.mmc
 %{_sbindir}/tgtd
 %{_sbindir}/tgtadm
 %{_sbindir}/tgt-setup-lun
 %{_sbindir}/tgt-admin
 %{_sbindir}/tgtimg
-%{_mandir}/man5/*
-%{_mandir}/man8/*
-%{_initrddir}/tgtd
+/usr/lib/tgt/backing-store/bs_rbd.so
+
+/etc/tgt/tgtd.conf
+/etc/tgt/targets.conf
 /etc/bash_completion.d/tgt
-%attr(0600,root,root) %config(noreplace) /etc/tgt/targets.conf
+/usr/lib/systemd/system/tgtd.service

@@ -90,37 +90,6 @@
 #define ASS_TGT_PORT 0x10
 #define ASS_TGT_DEV 0x20
 
-/*
- * Designator type - SPC-4 Reference
- *
- * 0 - Vendor specific - 7.6.3.3
- * 1 - T10 vendor ID - 7.6.3.4
- * 2 - EUI-64 - 7.6.3.5
- * 3 - NAA - 7.6.3.6
- * 4 - Relative Target port identifier - 7.6.3.7
- * 5 - Target Port group - 7.6.3.8
- * 6 - Logical Unit group - 7.6.3.9
- * 7 - MD5 logical unit identifier - 7.6.3.10
- * 8 - SCSI name string - 7.6.3.11
- */
-#define DESG_VENDOR 0
-#define DESG_T10 1
-#define DESG_EUI64 2
-#define DESG_NAA 3
-#define DESG_REL_TGT_PORT 4
-#define DESG_TGT_PORT_GRP 5
-#define DESG_LU_GRP 6
-#define DESG_MD5 7
-#define DESG_SCSI 8
-
-#define NAA_IEEE_EXTD		0x2
-#define NAA_LOCAL		0x3
-#define NAA_IEEE_REGD		0x5
-#define NAA_IEEE_REGD_EXTD	0x6
-
-#define NAA_DESG_LEN		0x8
-#define NAA_DESG_LEN_EXTD	0x10
-
 
 static void update_vpd_80(struct scsi_lu *lu, void *sn)
 {

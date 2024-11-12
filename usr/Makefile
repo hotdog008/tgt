@@ -1,8 +1,14 @@
 sbindir ?= $(PREFIX)/sbin
 libdir ?= $(PREFIX)/lib/tgt
 
+# mkdir -p /var/lib/jenkins/tgt/include/
+# cp -rf /var/lib/jenkins/rpmbuild/BUILD/tgstor_9600_storage/build/lib /var/lib/jenkins/tgt/
+# cp -rf /var/lib/jenkins/rpmbuild/BUILD/tgstor_9600_storage/src/include/rbd /var/lib/jenkins/tgt/include/
+# cp -rf /var/lib/jenkins/rpmbuild/BUILD/tgstor_9600_storage/src/include/rados /var/lib/jenkins/tgt/include/
+
 ifneq ($(shell test -e /usr/include/linux/signalfd.h && echo 1),)
-CFLAGS += -DUSE_SIGNALFD
+#CFLAGS += -DUSE_SIGNALFD -I/var/lib/jenkins/tgt/include -L/var/lib/jenkins/tgt/lib
+CFLAGS += -DUSE_SIGNALFD -I/var/lib/ceph/include -L/var/lib/ceph/lib64
 endif
 
 ifneq ($(shell test -n $(shell find /usr/include -name "timerfd.h" | head -n1) && echo 1),)

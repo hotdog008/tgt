@@ -19,6 +19,7 @@ BASE=`cd $DIR/.. ; pwd`
 _TOP="$BASE/pkg"
 SPEC="tgtd.spec"
 LOG=/tmp/`basename $0`-$$.log
+LOG=/tmp/log
 
 # get branch name
 branch=`git branch | grep '^*' | sed 's/^..\(.*\)/\1/'`
@@ -32,11 +33,11 @@ if [ "$version" = "$release" ]; then
     release=0
 fi
 
-if [ "$branch" != "master" ]; then
-    # if not under master branch include hash tag
-    hash=`git rev-parse HEAD | cut -c 1-6`
-    release="$release.$hash"
-fi
+#if [ "$branch" != "main" ]; then
+#    # if not under master branch include hash tag
+#    hash=`git rev-parse HEAD | cut -c 1-6`
+#    release="$release.$hash"
+#fi
 
 echo "Building version: $version-$release"
 
@@ -47,7 +48,7 @@ cp_src() {
     cp -a doc $dest
     cp -a scripts $dest
     cp -a usr $dest
-    cp -a README $dest
+#    cp -a README $dest
     cp -a Makefile $dest
 }
 
@@ -61,7 +62,7 @@ check() {
 }
 
 build_rpm() {
-    name=scsi-target-utils-$version-$release
+    name=scsi-target-utils-$version-$release.ky10
     TARBALL=$name.tgz
     SRPM=$_TOP/SRPMS/$name.src.rpm
 
@@ -79,7 +80,7 @@ build_rpm() {
     rpmbuild -bs --define="_topdir $_TOP" $_TOP/SPECS/$SPEC
     check "Failed to create source rpm."
 
-    rpmbuild -bb --define="_topdir $_TOP" $_TOP/SPECS/$SPEC > $LOG 2>&1
+    rpmbuild -bb --define="_topdir $_TOP" $_TOP/SPECS/$SPEC > $LOG
     check "Failed to build rpm. LOG: $LOG"
     # display created rpm files
     grep ^Wrote $LOG
